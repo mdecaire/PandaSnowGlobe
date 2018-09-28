@@ -43,9 +43,11 @@
                 //https://github.com/mrdoob/three.js/blob/master/examples/webgl_lights_hemisphere.html
 
                 scene.add(new THREE.AmbientLight(0x000000));
-                scene.add(globe);
-                //    scene.add(bear);
-                scene.add(snow);
+              // scene.add(globe);
+               bear.rotation.set(0,-.1,0);
+               bear.position.y=-4;
+                scene.add(bear);
+             //   scene.add(snow);
 
             }
             //taken from the textbook
@@ -70,8 +72,8 @@
         }
 
         function drawBear() {
-            var bear = drawBlackOval();
-            var oval1 = drawWhiteOval();
+            var bear = drawOuterOval();
+            var oval1 = drawInnerOval();
             oval1.position.x = 1;
             oval1.position.z = .25;
 
@@ -85,19 +87,105 @@
             lLeg.position.x = .65;
             lLeg.position.y = -2.45;
             lLeg.position.z = 2.75;
-
+            
+            var head= drawHead()
+            head.position.y=3.9;
             var rArm = drawCone();
             rArm.position.x = 8;
-            bear.scale.set(.75, 1, 1);
-            bear.position.y = -4.0;
+           
 
             bear.add(oval1);
             //bear.add(rArm);
             bear.add(rLeg);
             bear.add(lLeg);
+           bear.add(head);
             return bear;
         }
 
+        function drawHead(){   
+            var head = new THREE.Mesh(
+                new THREE.SphereGeometry(2, 100, 100),
+                new THREE.MeshLambertMaterial({
+                    color: "white"
+                })
+            );
+           var lEar=drawEar();
+           lEar.position.set(-1,1.75,.75);
+           lEar.rotation.set(-15,0,0);
+
+           var rEar=drawEar();
+           rEar.position.set(.6,1.75,-1);
+           rEar.rotation.set(15,0,0);
+
+           var rEye=drawEye();
+           rEye.scale.set(.7,.8,.7);
+           rEye.position.set(1.65,.75,.45);
+           rEye.rotation.y=.30;
+           rEye.rotation.x=0;
+           rEye.rotation.z=.10;
+           var lEye=drawEye();
+           lEye.scale.set(.7,.8,.7);
+           lEye.position.set(.75,.75,1.65);
+
+           head.add(lEye);
+           head.add(rEye);
+           head.add(lEar);
+           head.add(rEar);
+           
+            return head;
+        }
+        function drawEar(){
+            var ear= new THREE.Mesh(
+                new THREE.SphereGeometry(.54, 100, 50),
+                new THREE.MeshLambertMaterial({
+                    color: "black"
+                })
+            );
+            ear.scale.set(1,.75,1);
+            
+            return ear;
+        }
+        function drawEye(){
+          
+
+            
+            var eye = new THREE.Mesh(
+                new THREE.SphereGeometry(.55, 100, 50),
+                new THREE.MeshPhongMaterial({
+                    color: "black",
+                    specular: 0x8B7D7B,
+                    shininess: 3,
+                    
+                })
+                
+            );
+            var white = new THREE.Mesh(
+                new THREE.SphereGeometry(.35, 100, 50),
+                new THREE.MeshPhongMaterial({
+                    color: "white",
+                    specular: 0x8B7D7B,
+                    shininess: 3,
+                    
+                })
+                
+            );
+            var pupil = new THREE.Mesh(
+                new THREE.SphereGeometry(.15, 100, 50),
+                new THREE.MeshLambertMaterial({
+                    color: 0x8A3324
+                })
+                
+                
+            );
+            white.position.set(.2,0,.25);
+            pupil.position.set(.2,0,.2);
+            white.add(pupil);
+           eye.scale.set(.75,1,.75);
+           eye.add(white);
+           return eye;
+    
+        }
+        
         function drawCone() {
             var arm = new THREE.Mesh(
                 new THREE.CylinderGeometry(.75, .15, 2.5, 64, 10),
@@ -121,7 +209,7 @@
 
         function drawLeg() {
             var leg = new THREE.Mesh(
-                new THREE.CylinderGeometry(.9, .25, 3, 64, 10),
+                new THREE.CylinderGeometry(.9, 0, 3, 64, 10),
                 new THREE.MeshLambertMaterial({
                     color: 'black'
                 })
@@ -137,7 +225,7 @@
             return leg;
         }
 
-        function drawBlackOval() {
+        function drawOuterOval() {
             var oval = new THREE.Mesh(
                 new THREE.SphereGeometry(3.25, 100, 50),
                 new THREE.MeshLambertMaterial({
@@ -147,7 +235,7 @@
             return oval;
         }
 
-        function drawWhiteOval() {
+        function drawInnerOval() {
             var oval = new THREE.Mesh(
                 new THREE.SphereGeometry(3, 100, 50),
                 new THREE.MeshLambertMaterial({
