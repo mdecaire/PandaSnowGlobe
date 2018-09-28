@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>"Snow Globe"</title>
+    
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+    <script src="three.js"></script>
+    <script src="TrackballControls.js"></script>
+
+    <script>
+        "use strict";
+        var scene, camera, renderer;
+        var canvas;
+        var controls;
+        var cameraAndLight;
+
+        function createWorld() {
+                renderer.setClearColor(0x8B8989);
+                scene = new THREE.Scene();
+                camera = new THREE.PerspectiveCamera(28,
+                    window.innerWidth / window.innerHeight, 0.1, 100);
+                var light = new THREE.DirectionalLight();
+                light.position.set(0, 0, 0);
+                camera.position.set(45, -2, 50);
+                camera.lookAt(scene.position);
+                camera.add(light);
+                scene.add(camera);
+                var globe = drawGlobe();
+                var bear = drawBear();
+                var snow = drawSnow();
+                snow.scale.set(10.9, 10.9, 10.9);
+                //lights up the globe taken from 
+                //https://github.com/mrdoob/three.js/blob/master/examples/webgl_lights_hemisphere.html
+
+                scene.add(new THREE.AmbientLight(0x000000));
+                scene.add(globe);
+                //    scene.add(bear);
+                scene.add(snow);
+
+            }
+            //taken from the textbook
+        function drawSnow() {
+            var points = new THREE.Geometry();
+            while (points.vertices.length < 1000) {
+                var x = 2 * Math.random() - 1; // (between -1 and 1)
+                var y = 2 * Math.random() - 1;
+                var z = 2 * Math.random() - 1;
+                if (x * x + y * y + z * z < 1) { // use vector only if length is less than 1
+                    var pt = new THREE.Vector3(x, y, z);
+                    points.vertices.push(pt);
+                }
+            }
+            var pointMaterial = new THREE.PointCloudMaterial({
+                color: "snow1",
+                size: 2,
+                sizeAttenuation: false
+            });
+            var sphereOfPoints = new THREE.PointCloud(points, pointMaterial);
+            return sphereOfPoints;
+        }
+
+        function drawBear() {
+            var bear = drawBlackOval();
+            var oval1 = drawWhiteOval();
+            oval1.position.x = 1;
+            oval1.position.z = .25;
+
+            var rLeg = drawLeg();
+            rLeg.rotation.set(10, 10, 90);
+            rLeg.position.x = 2.75;
+            rLeg.position.y = -2.45;
+
+            var lLeg = rLeg.clone();
+            lLeg.rotation.set(10, 10, 90);
+            lLeg.position.x = .65;
+            lLeg.position.y = -2.45;
+            lLeg.position.z = 2.75;
+
+            var rArm = drawCone();
+            rArm.position.x = 8;
+            bear.scale.set(.75, 1, 1);
+            bear.position.y = -4.0;
+
+            bear.add(oval1);
+            //bear.add(rArm);
+            bear.add(rLeg);
+            bear.add(lLeg);
+            return bear;
+        }
+
+        function drawCone() {
+            var arm = new THREE.Mesh(
+                new THREE.CylinderGeometry(.75, .15, 2.5, 64, 10),
+                new THREE.MeshLambertMaterial({
+                    color: 0xCD853F
+                })
+            );
+
+            var hand = new THREE.Mesh(
+                new THREE.SphereGeometry(.75, 100, 50, 0, 2 * Math.PI, 0, Math.PI / 2),
+                new THREE.MeshLambertMaterial({
+                    color: "pink"
+                })
+            )
+            hand.position.y = 1.25;
+            arm.add(hand);
+            return arm;
+
+        }
+
+
+        function drawLeg() {
+            var leg = new THREE.Mesh(
+                new THREE.CylinderGeometry(.9, .25, 3, 64, 10),
+                new THREE.MeshLambertMaterial({
+                    color: 'black'
+                })
+            );
+            var bottom = new THREE.Mesh(
+                new THREE.CylinderGeometry(.65, .25, .1, 64, 10),
+                new THREE.MeshLambertMaterial({
+                    color: 0xFFFAFA
+                })
+            );
+            bottom.position.y = 1.5;
+            leg.add(bottom.clone());
+            return leg;
+        }
+
+        function drawBlackOval() {
+            var oval = new THREE.Mesh(
+                new THREE.SphereGeometry(3.25, 100, 50),
+                new THREE.MeshLambertMaterial({
+                    color: "black"
+                })
+            )
+            return oval;
+        }
+
+        function drawWhiteOval() {
+            var oval = new THREE.Mesh(
+                new THREE.SphereGeometry(3, 100, 50),
+                new THREE.MeshLambertMaterial({
+                    color: 0xFFFAFA
+                })
+            )
+            oval.scale.set(.75, .9, 1);
+            return oval;
+        }
+
+        function drawGlobe() {
+            var hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.6);
+            hemiLight.color.setHSL(0.6, 1, 0.6);
+            hemiLight.groundColor.setHSL(0.095, 1, 0.75);
+            hemiLight.position.set(0, 50, 0);
+            var globe = new THREE.Mesh(
+                new THREE.SphereGeometry(11.5, 100, 50),
+                new THREE.MeshPhongMaterial({
+                    color: "white",
+                    specular: 0x202020,
+                    transparent: true,
+                    shininess: 5,
+                    opacity: 0.2,
+                })
+            );
+            globe.position.y = 1;
+            var base = new THREE.Mesh(
+                new THREE.CylinderGeometry(8, 10, 3.5, 64, 10),
+                new THREE.MeshPhongMaterial({
+                    color: 0x5E2612, // reflectivity for diffuse light
+                    specular: 0xA0522D, // reflectivity for specular light
+                    shininess: 5 // controls size of specular highlights
+                })
+            );
+            base.position.y = -10;
+            globe.add(base.clone());
+            var snowLayer = new THREE.Mesh(
+                new THREE.CylinderGeometry(8, 8, .1, 50, 10),
+                new THREE.MeshLambertMaterial({
+                    color: 0xFFFaFa
+                })
+            );
+            snowLayer.position.y = -8.2;
+            globe.add(snowLayer.clone());
+            globe.add(hemiLight);
+            return globe;
+
+        }
+
+        var clock;
+
+        function doFrame() {
+            //  updateForFrame();
+            controls.update();
+            render();
+            requestAnimationFrame(doFrame);
+        }
+
+        function updateForDrift() {
+            for (var i = 0; i < geometry.vertices.length; i++) {
+                var v = points[i];
+                v.add(driftSpeeds[i]);
+                if (v.length() > 1) {
+                    // When outside the sphere, change to a random velocity,
+                    // and multiply the point by 0.9997 to move it back
+                    // towards the inside of the sphere.  Using a value
+                    // close to 1 allows the sphere to get a little
+                    // fuzzy.
+                    driftSpeeds[i] = randomVelocity();
+                    v.multiplyScalar(0.9997);
+                } else if (Math.random() < 0.001) {
+                    // change to a new random velocity, with a small probability
+                    driftSpeeds[i] = randomVelocity();
+                }
+            }
+            geometry.verticesNeedUpdate = true;
+        }
+
+        function doResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix(); // Need to call this for the change in aspect to take effect.
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function render() {
+            /*
+    if (animating) {
+		    
+         if (driftRB.checked) {
+                updateForDrift();
+            }
+            requestAnimationFrame(render);
+        }*/
+            renderer.render(scene, camera);
+        }
+
+        function init() {
+            try {
+                try {
+                    renderer = new THREE.WebGLRenderer({
+                        antiAlias: true
+                    });
+                } catch (e) {
+                    document.body.innerHTML = "<h3><b>Sorry, WebGL is required but is not available.</b><h3>";
+                    return;
+                }
+                canvas = renderer.domElement;
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                window.addEventListener("resize", doResize, false);
+                document.body.appendChild(canvas);
+                clock = new THREE.Clock();
+                createWorld();
+                controls = new THREE.TrackballControls(camera, canvas);
+                controls.noPan = true;
+                controls.noZoom = false;
+                requestAnimationFrame(doFrame);
+            } catch (e) {
+                document.body.innerHTML = "<h3><b>Sorry, an error occurred:<br>" + e + "</b></h3>";
+            }
+
+        }
+    </script>
+</head>
+
+<body onload="init()">
+</body>
+
+</html>
