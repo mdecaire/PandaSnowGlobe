@@ -43,17 +43,17 @@
                 //https://github.com/mrdoob/three.js/blob/master/examples/webgl_lights_hemisphere.html
 
                 scene.add(new THREE.AmbientLight(0x000000));
-              // scene.add(globe);
+             // scene.add(globe);
                bear.rotation.set(0,-.1,0);
                bear.position.y=-4;
                 scene.add(bear);
-             //   scene.add(snow);
+            //    scene.add(snow);
 
             }
             //taken from the textbook
         function drawSnow() {
             var points = new THREE.Geometry();
-            while (points.vertices.length < 1000) {
+            while (points.vertices.length < 1500) {
                 var x = 2 * Math.random() - 1; // (between -1 and 1)
                 var y = 2 * Math.random() - 1;
                 var z = 2 * Math.random() - 1;
@@ -63,11 +63,13 @@
                 }
             }
             var pointMaterial = new THREE.PointCloudMaterial({
-                color: "snow1",
+                color: "blue",
                 size: 2,
                 sizeAttenuation: false
             });
+           
             var sphereOfPoints = new THREE.PointCloud(points, pointMaterial);
+       
             return sphereOfPoints;
         }
 
@@ -118,21 +120,43 @@
            rEar.rotation.set(15,0,0);
 
            var rEye=drawEye();
-           rEye.scale.set(.7,.8,.7);
-           rEye.position.set(1.65,.75,.45);
-           rEye.rotation.y=.30;
-           rEye.rotation.x=0;
-           rEye.rotation.z=.10;
-           var lEye=drawEye();
-           lEye.scale.set(.7,.8,.7);
-           lEye.position.set(.75,.75,1.65);
+           rEye.scale.set(.7,.8,.1);
+           rEye.position.set(1.9,.75,.4);
+           rEye.rotation.y=-5.3;
+           rEye.rotation.z=1;
+           rEye.rotation.x=-.5;
 
+           var lEye=drawEye();
+           lEye.scale.set(.7,.8,.1);
+           lEye.position.set(.6,.75,1.9);
+           lEye.rotation.z=-.5;
+           lEye.rotation.y=.7;
+           lEye.rotation.x=-.3;
+           var nose=drawNose();
+           nose.position.set(1.38,.25,1.4);
+
+           var mouth=drawMouth();
+           mouth.position.set(1.2,-.55,1.2);
            head.add(lEye);
            head.add(rEye);
            head.add(lEar);
            head.add(rEar);
-           
+           head.add(nose);
+           head.add(mouth);
             return head;
+        }
+        function drawMouth(){
+            var mouth = new THREE.Mesh(
+                new THREE.SphereGeometry(.35, 100, 50),
+                new THREE.MeshPhongMaterial({
+                    color: "crimson",
+                    specular: 0x8B7D7B,
+                    shininess: 4,
+                    
+                })  
+            );
+            mouth.scale.set(.8,1,.8);
+            return mouth;
         }
         function drawEar(){
             var ear= new THREE.Mesh(
@@ -145,12 +169,24 @@
             
             return ear;
         }
+       
+       function drawNose(){
+        var nose = new THREE.Mesh(
+                new THREE.SphereGeometry(.25, 100, 50),
+                new THREE.MeshPhongMaterial({
+                    color: "black",
+                    specular: 0x8B7D7B,
+                    shininess: 4,
+                    
+                })  
+            );
+            nose.scale.set(1,.8,1);
+            return nose;
+       }
         function drawEye(){
-          
-
             
             var eye = new THREE.Mesh(
-                new THREE.SphereGeometry(.55, 100, 50),
+                new THREE.SphereGeometry(.60, 100, 50),
                 new THREE.MeshPhongMaterial({
                     color: "black",
                     specular: 0x8B7D7B,
@@ -172,13 +208,13 @@
             var pupil = new THREE.Mesh(
                 new THREE.SphereGeometry(.15, 100, 50),
                 new THREE.MeshLambertMaterial({
-                    color: 0x8A3324
+                    color: 0x3104E8B
                 })
                 
                 
             );
-            white.position.set(.2,0,.25);
-            pupil.position.set(.2,0,.2);
+            white.position.set(0,0,.4);
+            pupil.position.set(0,0,.4);
             white.add(pupil);
            eye.scale.set(.75,1,.75);
            eye.add(white);
