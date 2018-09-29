@@ -39,21 +39,53 @@
                 var bear = drawBear();
                 var snow = drawSnow();
                 snow.scale.set(10.9, 10.9, 10.9);
-               
-       
-
-             scene.add(new THREE.AmbientLight(0x000000));
-              scene.add(globe);
+ 
+            scene.add(new THREE.AmbientLight(0x000000));
+             scene.add(globe);
                bear.rotation.set(0,-.1,0);
                bear.position.y=-5;
+            
                globe.add(bear);
-            //    scene.add(snow);
+              // globe.add(snow);
+          
 
             }
-            //taken from the textbook
-        function drawSnow() {
+            
+          function drawSnow() {
+           var points=getPoints();
+           var points1=getPoints();
+           var points2=getPoints();     
+           
+            var pointMaterial = new THREE.PointCloudMaterial({
+                color: "blue",
+                size: 2,
+                shininess:10,
+                sizeAttenuation: false
+            });
+            var pointMaterial1 = new THREE.PointCloudMaterial({
+                color: "red",
+                size: 2,
+                shininess:10,
+                sizeAttenuation: false
+            });
+            var pointMaterial2 = new THREE.PointCloudMaterial({
+                color: "green",
+                size: 2,
+                shininess:10,
+                sizeAttenuation: false
+            });
+           
+            var sphereOfPoints = new THREE.PointCloud(points, pointMaterial);
+            var sphereOfPoints1 = new THREE.PointCloud(points1, pointMaterial1);
+            var sphereOfPoints2 = new THREE.PointCloud(points2, pointMaterial2);
+            sphereOfPoints.add(sphereOfPoints1);
+            sphereOfPoints.add(sphereOfPoints2);
+            return sphereOfPoints;
+        }
+        //taken from the textbook
+    function getPoints(){       
             var points = new THREE.Geometry();
-            while (points.vertices.length < 1500) {
+            while (points.vertices.length < 500) {
                 var x = 2 * Math.random() - 1; // (between -1 and 1)
                 var y = 2 * Math.random() - 1;
                 var z = 2 * Math.random() - 1;
@@ -62,17 +94,8 @@
                     points.vertices.push(pt);
                 }
             }
-            var pointMaterial = new THREE.PointCloudMaterial({
-                color: "blue",
-                size: 2,
-                sizeAttenuation: false
-            });
-           
-            var sphereOfPoints = new THREE.PointCloud(points, pointMaterial);
-       
-            return sphereOfPoints;
-        }
-
+            return points;
+    }
         function drawBear() {
             var bear = drawOuterOval();
             var oval1 = drawInnerOval();
@@ -96,6 +119,7 @@
 
             var cone = drawIceCream();
             cone.position.set(3.05,0,1.5);
+
            var rArm=drawArm();
            rArm.position.set (3.1,.5,0);
            rArm.rotation.set (90,-10.2,10);
@@ -110,7 +134,10 @@
           var lHand=drawHand();
             lHand.scale.set(.6,.8,.6);
             lHand.position.set(-1.2,5,3.0);
-        
+
+          var balloon=drawBalloon();
+            balloon.position.set(-.95,9.65,2.7);
+            
             bear.add(oval1);
             bear.add(rArm);
             bear.add(lArm);
@@ -119,10 +146,80 @@
             bear.add(rLeg);
             bear.add(lLeg);
             bear.add(head);
-            bear.add(cone)
+            bear.add(cone);
+            bear.add(balloon);
             return bear;
         }
 
+        function drawBalloon(){
+            var balloon = new THREE.Mesh(
+                new THREE.SphereGeometry(1, 100, 100, 0, 2 * Math.PI, 0, Math.PI / 2),
+                new THREE.MeshPhongMaterial({
+                    color: 0xFF0000,
+                    specular: 0x8B7D7B,
+                    shininess:4,
+                    flatShading:true
+    
+                }) 
+            )
+            var bBottom = new THREE.Mesh(
+                new THREE.CylinderGeometry(.998, .5, 1.25, 100, 100),
+                new THREE.MeshPhongMaterial({
+                    color: 0xFF0000,
+                    specular: 0x8B7D7B,
+                    shininess:4,
+                    flatShading:true
+    
+                }) 
+            )
+            var ballBottom= new THREE.Mesh(
+                new THREE.SphereGeometry(.55, 100, 100),
+                new THREE.MeshPhongMaterial({
+                    color: 0xFF0000,
+                    specular: 0x8B7D7B,
+                    shininess:4,
+                    flatShading:true
+    
+                }) 
+            )
+            var end = new THREE.Mesh(
+                new THREE.CylinderGeometry(.05, .1, .1, 64, 10),
+                new THREE.MeshPhongMaterial({
+                    color: 0xFF0000,
+                    specular: 0x8B7D7B,
+                    shininess:4,
+                    flatShading:true
+    
+                })
+            )
+            var curveGeom= new THREE.Geometry();
+            var cosine = new THREE.Curve();
+            cosine.getPoint = function(t) {
+            t = (t - 0.5) * 7*Math.PI;
+            return new THREE.Vector2( 3 + 2*Math.cos(t), t );
+            }
+            var points = cosine.getPoints(128);
+            var curveGeom = new THREE.Geometry();
+            for (var i = 0; i < points.length; i++) {
+                curveGeom.vertices.push(new THREE.Vector3( points[i].x, points[i].y, 0 ));
+            }
+            
+            var string = new THREE.Line(curveGeom, 
+            new THREE.LineBasicMaterial({ color:"blue", linewidth:2 }));
+
+            string.position.set(-.5,-2.75,0)
+            string.scale.set(.15,.15,1);
+            end.position.y=-1.6;
+            end.position.x=0;
+            end.position.z=0;
+            ballBottom.position.y=-1;
+            bBottom.position.y=-.61;
+            balloon.add(bBottom);
+            balloon.add(ballBottom);
+            balloon.add(end);
+            balloon.add(string);
+            return balloon;
+        }
         function drawArm(){
             var arm = new THREE.Mesh(
                 new THREE.SphereGeometry(2, 100, 100),
@@ -202,9 +299,12 @@
         function drawEar(){
             var ear= new THREE.Mesh(
                 new THREE.SphereGeometry(.54, 100, 50),
-                new THREE.MeshLambertMaterial({
-                    color: "black"
-                })
+                new THREE.MeshPhongMaterial({
+                    color: "black",
+                    specular: 0x8B7D7B,
+                    shininess: 5,
+                    
+                })  
             );
             ear.scale.set(1,.75,1);
             
@@ -274,7 +374,7 @@
             var scoop = new THREE.Mesh(
                 new THREE.SphereGeometry(.75, 100, 50, 0, 2 * Math.PI, 0, Math.PI / 2),
                 new THREE.MeshLambertMaterial({
-                    color: "pink"
+                    color: 0xEE7AE9
                 })
             )
             scoop.position.y = 1.25;
@@ -305,9 +405,12 @@
         function drawOuterOval() {
             var oval = new THREE.Mesh(
                 new THREE.SphereGeometry(3.25, 100, 50),
-                new THREE.MeshLambertMaterial({
-                    color: "black"
-                })
+                new THREE.MeshPhongMaterial({
+                    color: "black",
+                    specular: 0x8B7D7B,
+                    shininess: 1,
+                    
+                })  
             )
             return oval;
         }
