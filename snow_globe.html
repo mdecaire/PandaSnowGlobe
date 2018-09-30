@@ -1,626 +1,147 @@
+<!--
+ This file draws and controls the main program. It includes the init
+ animation, and trackball functions.
+ Class: CMSC 405 6380 Computer Graphics
+ * Project Title: THREEjs 3D graphics 
+ * @author MichelleDecaire 
+ * DueDate: 9/30/2018 
+ */ -->
 <!DOCTYPE html>
 
 <html>
-
-
 
 <head>
 
     <meta charset="UTF-8">
 
     <title>"Snow Globe"</title>
-
     <link rel="stylesheet" href="demo.css">
 
     <script src="three.js"></script>
-
     <script src="TrackballControls.js"></script>
-
-
-
+    <script src="bear.js"></script>
+    <script src="snow.js"></script>
+    <script src="globe.js"></script>
+    <script src="animations.js"></script>
     <script>
         "use strict";
-
         var canvas, scene, camera, renderer;
-
         var controls;
         var globe;
         var snow;
         var bear;
         var balloon;
-        var animating=true, balloonFly =false;
-        var stillSnow=false, animateSnow=false, animatePanda=false;
+        var animating = true,
+            balloonFly = false,
+            globeShake = false;
+        var stillSnow = false,
+            animateSnow = false,
+            animatePanda = false;
         var lightOff;
-        var noAnimate, ball, pan,stsn,mvsn,lght;
-       
+        var noAnimate, ball, pan, stsn, mvsn, lght;
+        var hemiLight;
+        var shakeCount;
+        var shkglRb, onLght;
+        var count = 0,
+            snCount = 0;
+        var existingSnow = false;
+
+        //function to create lighting and scen elements
         function createWorld() {
 
             renderer.setClearColor(0x8B8989);
 
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(35, canvas.width / canvas.height, 0.1, 100);
-            camera.position.set(40,0, 40);
+            camera.position.set(40, 0, 40);
 
-             var light = new THREE.DirectionalLight();
+            var light = new THREE.DirectionalLight();
             light.position.set(0, 0, 0);
             camera.add(light); // Viewpoint light moves with camera.
             scene.add(camera);
             drawImages();
-             
+
             scene.add(new THREE.AmbientLight(0x000000));
-            
-           
 
         }
-        function drawImages(){
+
+        /*This function gives the flexibility
+        to reset the animation to the original 
+        to the original picture    */
+        function drawImages() {
             globe = drawGlobe();
-             bear = drawBear();
-             scene.add(globe);
-             bear.rotation.set(0, -.1, 0);
+            bear = drawBear();
+            scene.add(globe);
+            bear.rotation.set(0, -.1, 0);
             bear.position.y = -5;
             globe.add(bear);
-                      
-            globe.scale.set(1.1,1.1,1.1,);
-        }
-        
-        var points0; 
-        var points1;
-        var points2;
-       
-        function drawSnow() {
-             points0 = getPoints();  
-             points1 = getPoints();
-             points2 = getPoints();
 
-            var pointMaterial = new THREE.PointCloudMaterial({
-                color: "blue",
-                size: 2,
-                sizeAttenuation: false
-            });
-
-            var pointMaterial1 = new THREE.PointCloudMaterial({
-                color: "red",
-                size: 2,
-                sizeAttenuation: false
-            });
-
-            var pointMaterial2 = new THREE.PointCloudMaterial({
-                color: "green",
-                size: 2,
-                sizeAttenuation: false
-            });
-           var sphereOfPoints = new THREE.PointCloud(points0, pointMaterial);
-            var sphereOfPoints1 = new THREE.PointCloud(points1, pointMaterial1);
-            var sphereOfPoints2 = new THREE.PointCloud(points2, pointMaterial2);
-            sphereOfPoints.add(sphereOfPoints1);
-            sphereOfPoints.add(sphereOfPoints2);
-        
-            return sphereOfPoints;
+            globe.scale.set(1.1, 1.1, 1.1, );
         }
 
-        //modified  from the textbook to add color
-    
-        function getPoints() {
-            var i=0;
-            var points = new THREE.Geometry();
-
-            while (points.vertices.length < 500) {
-                var x = 2 * Math.random() - 1; // (between -1 and 1)
-                var y = 2 * Math.random() - 1;
-                var z = 2 * Math.random() - 1;
-                if (x * x + y * y + z * z < 1) { // use vector only if length is less than 1
-                    
-                    var pt = new THREE.Vector3(x, y, z);
-                    points.vertices.push(pt);
-                }
-                i++;
-            }
-          return points;
-    }
-
-
-        function drawBear() {
-
-            var bear = drawOuterOval();
-
-            var oval1 = drawInnerOval();
-            oval1.position.x = 1;
-            oval1.position.z = .25;
-
-           var rLeg = drawLeg();
-            rLeg.rotation.set(10, 10, 90);
-            rLeg.position.x = 2.75;
-            rLeg.position.y = -2.45;
-
-            var lLeg = rLeg.clone();
-            lLeg.rotation.set(10, 10, 90);
-            lLeg.position.x = .65;
-            lLeg.position.y = -2.45;
-           lLeg.position.z = 2.75;
-
-            var head = drawHead()
-            head.position.y = 3.9;
-            head.rotation.y = .1;
-
-            var cone = drawIceCream();
-            cone.position.set(3.05, 0, 1.5);
-
-            var rArm = drawArm();
-           rArm.position.set(3.1, .5, 0);
-            rArm.rotation.set(90, -10.2, 10);
-
-            var rHand = drawHand();
-           rHand.position.set(3.35, -.5, 1.25);
-
-            var lArm = drawArm()
-            lArm.position.set(-1.3, 3.25, 2.7);
-            lArm.rotation.set(0, 0, 0);
-
-            var lHand = drawHand();
-            lHand.scale.set(.6, .8, .6);
-            lHand.position.set(-1.2, 5, 3.0);
-
-            balloon = drawBalloon();
-            balloon.position.set(-.95, 9.65, 2.7);
-
-            bear.add(oval1);
-            bear.add(rArm);
-            bear.add(lArm);
-            bear.add(rHand);
-            bear.add(lHand);
-            bear.add(rLeg);
-            bear.add(lLeg);
-            bear.add(head);
-            bear.add(cone);
-            bear.add(balloon);
-
-            return bear;
-
-        }
-
-
-
-        function drawBalloon() {
-               var balloon = new THREE.Mesh(
-                new THREE.SphereGeometry(1, 100, 100, 0, 2 * Math.PI, 0, Math.PI / 2),
-                new THREE.MeshPhongMaterial({
-                    color: 0xFF0000,
-                    specular: 0x8B7D7B,
-                    shininess: 4,
-                    flatShading: true
-                })
-
-            )
-
-            var bBottom = new THREE.Mesh(
-                new THREE.CylinderGeometry(.998, .5, 1.25, 100, 100),
-                new THREE.MeshPhongMaterial({
-                    color: 0xFF0000,
-                   specular: 0x8B7D7B,
-                    shininess: 4,
-                   flatShading: true
-                })
-            )
-
-            var ballBottom = new THREE.Mesh(
-                new THREE.SphereGeometry(.55, 100, 100),
-                new THREE.MeshPhongMaterial({
-                    color: 0xFF0000,
-                    specular: 0x8B7D7B,
-                    shininess: 4,
-                    flatShading: true
-                })
-            )
-
-            var end = new THREE.Mesh(
-                new THREE.CylinderGeometry(.05, .1, .1, 64, 10),
-                new THREE.MeshPhongMaterial({
-                    color: 0xFF0000,
-                    specular: 0x8B7D7B,
-                    shininess: 4,
-                    flatShading: true
-               })
-            )
-            var curveGeom = new THREE.Geometry();
-            var cosine = new THREE.Curve();
-            cosine.getPoint = function(t) {
-
-                t = (t - 0.5) * 7 * Math.PI;
-
-                return new THREE.Vector2(3 + 2 * Math.cos(t), t);
-
-            }
-            var points = cosine.getPoints(128);
-            var curveGeom = new THREE.Geometry();
-            for (var i = 0; i < points.length; i++) {
-
-                curveGeom.vertices.push(new THREE.Vector3(points[i].x, points[i].y, 0));
-            }
-            var string = new THREE.Line(curveGeom,
-                new THREE.LineBasicMaterial({
-                    color: "blue",
-                    linewidth: 2
-                }));
-
-            string.position.set(-.5, -2.75, 0)
-            string.scale.set(.15, .15, 1);
-            end.position.y = -1.6;
-            end.position.x = 0;
-            end.position.z = 0;
-            ballBottom.position.y = -1;
-            bBottom.position.y = -.61;
-            balloon.add(bBottom);
-            balloon.add(ballBottom);
-            balloon.add(end);
-            balloon.add(string);
-            return balloon;
-
-        }
-
-        function drawArm() {
-            var arm = new THREE.Mesh(
-              new THREE.SphereGeometry(2, 100, 100),
-                new THREE.MeshLambertMaterial({
-                    color: "black"
-                })
-            );
-            arm.scale.set(.25, 1, .25)
-            return arm;
-
-        }
-
-        function drawHand() {
-            var hand = new THREE.Mesh(
-                new THREE.SphereGeometry(.75, 100, 100),
-                new THREE.MeshLambertMaterial({
-                    color: "black"
-                })
-            );
-            hand.scale.set(1, .8, 1);
-            return hand;
-
-        }
-
-        function drawHead() {
-            var head = new THREE.Mesh(
-                new THREE.SphereGeometry(2, 100, 100),
-                new THREE.MeshLambertMaterial({
-                    color: "white"
-                })
-            );
-
-            var lEar = drawEar();
-            lEar.position.set(-1, 1.75, .75);
-            lEar.rotation.set(-15, 0, 0);
-
-            var rEar = drawEar();
-            rEar.position.set(.6, 1.75, -1);
-            rEar.rotation.set(15, 0, 0);
-
-            var rEye = drawEye();
-            rEye.scale.set(.7, .8, .1);
-            rEye.position.set(1.9, .75, .4);
-            rEye.rotation.y = -5.3;
-            rEye.rotation.z = 1;
-            rEye.rotation.x = -.5;
-
-            var lEye = drawEye();
-            lEye.scale.set(.7, .8, .1);
-            lEye.position.set(.6, .75, 1.9);
-            lEye.rotation.z = -.5;
-            lEye.rotation.y = .7;
-            lEye.rotation.x = -.3;
-
-            var nose = drawNose();
-            nose.position.set(1.38, .25, 1.4);
-
-            var mouth = drawMouth();
-            mouth.position.set(1.2, -.55, 1.2);
-
-            head.add(lEye);
-            head.add(rEye);
-            head.add(lEar);
-            head.add(rEar);
-            head.add(nose);
-            head.add(mouth);
-            return head;
-        }
-
-        function drawMouth() {
-            var mouth = new THREE.Mesh(
-                new THREE.SphereGeometry(.35, 100, 50),
-                new THREE.MeshPhongMaterial({
-                    color: "crimson",
-                    specular: 0x8B7D7B,
-                    shininess: 4,
-                })
-            );
-            mouth.scale.set(.8, 1, .8);
-            return mouth;
-        }
-
-        function drawEar() {
-            var ear = new THREE.Mesh(
-                new THREE.SphereGeometry(.54, 100, 50),
-                new THREE.MeshPhongMaterial({
-
-                    color: "black",
-                    specular: 0x8B7D7B,
-                    shininess: 5,
-                })
-
-            );
-            ear.scale.set(1, .75, 1);
-            return ear;
-
-        }
-
-        function drawNose() {
-            var nose = new THREE.Mesh(
-                new THREE.SphereGeometry(.25, 100, 50),
-                new THREE.MeshPhongMaterial({
-                    color: "black",
-                    specular: 0x8B7D7B,
-                    shininess: 4,
-                })
-
-            );
-            nose.scale.set(1, .8, 1);
-            return nose;
-        }
-
-        function drawEye() {
-
-            var eye = new THREE.Mesh(
-                new THREE.SphereGeometry(.60, 100, 50),
-                new THREE.MeshPhongMaterial({
-                    color: "black",
-                    specular: 0x8B7D7B,
-                    shininess: 3,
-                })
-            );
-
-            var white = new THREE.Mesh(
-                new THREE.SphereGeometry(.35, 100, 50),
-                new THREE.MeshPhongMaterial({
-                    color: "white",
-                    specular: 0x8B7D7B,
-                    shininess: 3,
-                })
-            );
-
-            var pupil = new THREE.Mesh(
-                new THREE.SphereGeometry(.15, 100, 50),
-                new THREE.MeshLambertMaterial({
-                    color: 0x3104E8B
-                })
-            );
-
-            white.position.set(0, 0, .4);
-            pupil.position.set(0, 0, .4);
-            white.add(pupil);
-            eye.scale.set(.75, 1, .75);
-            eye.add(white);
-
-            return eye;
-        }
-
-
-        function drawIceCream() {
-            var cone = new THREE.Mesh(
-                new THREE.CylinderGeometry(.75, .15, 2.5, 64, 10),
-                new THREE.MeshLambertMaterial({
-                    color: 0xCD853F
-                })
-            );
-
-
-            var scoop = new THREE.Mesh(
-                new THREE.SphereGeometry(.75, 100, 50, 0, 2 * Math.PI, 0, Math.PI / 2),
-                new THREE.MeshLambertMaterial({
-                    color: 0xEE7AE9
-                })
-            )
-            scoop.position.y = 1.25;
-            cone.add(scoop);
-            return cone;
-        }
-
-
-        function drawLeg() {
-            var leg = new THREE.Mesh(
-                new THREE.CylinderGeometry(.9, 0, 3, 64, 10),
-                new THREE.MeshLambertMaterial({
-                    color: 'black'
-                })
-            );
-
-            var bottom = new THREE.Mesh(
-                new THREE.CylinderGeometry(.65, .25, .1, 64, 10),
-                new THREE.MeshLambertMaterial({
-                    color: 0xFFFAFA
-                })
-            );
-            bottom.position.y = 1.5;
-            leg.add(bottom.clone());
-            return leg;
-        }
-
-        function drawOuterOval() {
-            var oval = new THREE.Mesh(
-            new THREE.SphereGeometry(3.25, 100, 50),
-
-             new THREE.MeshPhongMaterial({
-                color: "black",
-
-                specular: 0x8B7D7B,
-
-                shininess: 1,
-            })
-            );
-           return oval;
-        }
-
-
-        function drawInnerOval() {
-            var oval = new THREE.Mesh(
-                new THREE.SphereGeometry(3, 100, 50),
-                new THREE.MeshLambertMaterial({
-                   color: 0xFFFAFA
-                })
-            )
-            oval.scale.set(.75, .9, 1);
-            return oval
-        }
-
-
-
-        function drawGlobe() {
-            //lights up the globe taken from 
-            //https://github.com/mrdoob/three.js/blob/master/examples/webgl_lights_hemisphere.html
-            var hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.6);
-            hemiLight.color.setHSL(0.6, 1, 0.6);
-            hemiLight.groundColor.setHSL(0.095, 1, 0.75);
-            hemiLight.position.set(0, 50, 0);
-            var globe = new THREE.Mesh(
-             new THREE.SphereGeometry(11.5, 100, 50),
-                new THREE.MeshPhongMaterial({
-                    color: "white",
-                    specular: 0x202020,
-                    transparent: true,
-                    shininess: 5,
-                    opacity: 0.2,
-                })
-            );
-            globe.position.y = 1;
-            var base = new THREE.Mesh(
-                new THREE.CylinderGeometry(8, 10, 3.5, 64, 10),
-                new THREE.MeshPhongMaterial({
-                    color: 0x5E2612, // reflectivity for diffuse light
-                    specular: 0xA0522D, // reflectivity for specular light
-                    shininess: 5 // controls size of specular highlights
-                })
-            );
-
-            base.position.y = -10;
-            globe.add(base.clone());
-            var snowLayer = new THREE.Mesh(
-                new THREE.CylinderGeometry(8, 8, .1, 50, 10),
-                new THREE.MeshLambertMaterial({
-                    color: 0xFFFaFa
-                })
-            );
-            snowLayer.position.y = -8.2;
-            globe.add(snowLayer.clone());
-            globe.add(hemiLight);
-            return globe;
-        }
-
-       var count=0;
-       var snCount=0;
-       var existingSnow=false;
-        function doFrame () { 
-            if( animating && balloonFly) {
-                ballMovement();
-                render();
-                requestAnimationFrame(doFrame); 
-        	}
-            
-            if(animating && animateSnow){
-                updateForDrift();
-                render();
-                requestAnimationFrame(doFrame); 
-            }
-            
-        }
-        function drawStillSnow(){
+        //draws snow that does not move
+        //has three colors
+        function drawStillSnow() {
             snow = drawSnow();
-                snow.scale.set(10.9, 10.9, 10.9);
-                globe.add(snow);
-                render();
+            snow.scale.set(10.9, 10.9, 10.9);
+            globe.add(snow);
+            render();
         }
-        function ballMovement(){
+
+        //function to animate shaking globe
+        function moveGlobe() {
+            shakeCount++;
+            if (shakeCount % 8 == 0) {
+                globe.rotation.set(.05, 0, .05); //return to center
+            } else if (shakeCount % 6 == 0) {
+                globe.rotation.set(-.05, 0, -.05); //left
+            } else if (shakeCount % 4 == 0) {
+                globe.rotation.set(-.05, 0, -.05); //center
+            } else if (shakeCount % 2 == 0) {
+                globe.rotation.set(.05, 0, .05); //left
+            }
+            updateForDrift();
+        }
+
+        //function to move balloon up
+        function ballMovement() {
             count++;
-            if(count==50){
-                balloon.position.set(-.95, 9.65, 2.7); 
-                count=0;  
-                return;  
-            }           
-           
-            balloon.position.y+=.1;
+            if (count == 75) {
+                balloon.position.set(-.95, 9.65, 2.7);
+                count = 0;
+                return;
+            }
+
+            balloon.position.y += .05;
 
         }
-        var driftPoints;
-        var driftSpeeds;
-        var geometry;
-        var pointCloud;
 
-        function drawDriftSnow(){
-            driftPoints = new Array(1500);
-            driftSpeeds = new Array(1500);
-            var i=0;
-            while (i < 1500) {
-                var x = 2*Math.random() - 1;
-                var y = 2*Math.random() - 1;
-                var z = 2*Math.random() - 1;
-        if ( x*x + y*y + z*z < 1 ) {  
-            driftSpeeds[i] = randomVelocity();
-			driftPoints[i] = new THREE.Vector3(x,y,z);
-			i++;
+        //renders the animations
+        function doFrame() {
+            if (animating) {
+                updateForFrame();
+                render();
+                requestAnimationFrame(doFrame);
+            }
         }
-    }
-    geometry = new THREE.Geometry();
-    for (i = 0; i < 1000; i++) {
-        geometry.vertices.push(driftPoints[i]);
-    }
-        var material = new THREE.PointCloudMaterial({
-                color: 0x800080,
-                size: 2,
-                sizeAttenuation: false
-            });
-            pointCloud = new THREE.PointCloud(geometry,material);
-            pointCloud.scale.set(10.9, 10.9, 10.9);
-            globe.add(pointCloud);
-      }
-      var snCount=0;
- function updateForDrift() {  
-     if(snCount==0){
-            drawDriftSnow();  
-            snCount++;
-        }   
-    for (var i = 0; i < geometry.vertices.length; i++) {
-        var v = driftPoints[i];
-        v.add( driftSpeeds[i] );
-        if (v.length() > 1) {
-			    
-            driftSpeeds[i] = randomVelocity();
-			v.multiplyScalar(0.9997);
+
+        //checks which animations should occur
+        function updateForFrame() {
+            if (balloonFly) {
+                ballMovement();
+            }
+            if (animating && animateSnow) {
+                updateForDrift();
+            }
+            if (animating && animatePanda) {
+                bear.rotation.y += .01;
+            }
+            if (animating && globeShake) {
+                moveGlobe();
+            }
         }
-		else if (Math.random() < 0.001) {
-			   // change to a new random velocity, with a small probability
-            driftSpeeds[i] = randomVelocity();
-		}
-    }
-    geometry.verticesNeedUpdate = true;
-}
 
-        function randomVelocity() {
-            var dx = 0.001 + 0.003*Math.random();
-            var dy = 0.001 + 0.003*Math.random();
-            var dz = 0.001 + 0.003*Math.random();
-            if (Math.random() < 0.5) {
-                dx = -dx;
-            }
-            if (Math.random() < 0.5) {
-                dy = -dy;
-            }
-            if (Math.random() < 0.5) {
-                dz = -dz;
-            }
-            return new THREE.Vector3(dx,dy,dz);
-}
-
-
+        //controls for trackball came from text boox
         function installTrackballControls() {
             controls = new THREE.TrackballControls(camera, canvas);
             controls.noPan = true;
@@ -649,50 +170,67 @@
             canvas.addEventListener("touchmove", touch, false);
         }
 
+        //renders the image
         function render() {
             renderer.render(scene, camera);
 
         }
 
+        //checks which radio button has been selected
         function checkAnimation() {
-        if (noAnimate.checked) {
-            animating = false;
-            scene.remove(globe);
-            drawImages();
-            render();
-        } else{
-            animating=true;
-        }
-         if ( ball.checked) { 
-            count=0;
-            balloonFly=true;
-            doFrame();
-        } 
-        else{
-            balloonFly=false;
-        }
-         if ( mvsn.checked){
-             snCount=0;
-            animateSnow=true;
-            globe.remove(snow);
-            render();
-            doFrame();
-        }else{
-            animateSnow=false
-            globe.remove(pointCloud);
-            render();
-            doFrame();
-        }
-        if(pan.checked){
-            animatePanda=true;
-        }
-        else{
-            animatePanda=false;
-        }
-}
-    
+            if (noAnimate.checked) {
+                animating = false;
+                animateSnow = false;
+                balloonFly = false;
+                animatePanda = false;
+                scene.remove(globe);
+                drawImages();
+                render();
+            } else {
+                animating = true;
+            }
+            if (ball.checked) {
+                count = 0;
+                balloonFly = true;
+                doFrame();
+            }
 
- var shkglRb;
+            if (mvsn.checked) {
+                snCount = 0;
+                animateSnow = true;
+                globe.remove(snow);
+                render();
+                doFrame();
+            }
+            if (pan.checked) {
+                animatePanda = true;
+                doFrame();
+            }
+
+            if (lght.checked) {
+                globe.remove(hemiLight);
+                render();
+            }
+            if (onLght.checked) {
+                globe.add(hemiLight);
+                doFrame();
+            }
+            if (shkglRb.checked) {
+                snCount = 0;
+                shakeCount = 0;
+                animateSnow = false;
+                balloonFly = false;
+                animatePanda = false;
+                globeShake = true;
+                doFrame();
+            } else {
+                globeShake = false;
+            }
+        }
+
+
+        //initializes the canvas and elements
+        //most code came from textbook
         function init() {
             try {
                 canvas = document.getElementById("maincanvas");
@@ -706,28 +244,31 @@
                 return;
             }
 
-            
             noAnimate = document.getElementById("noAnimate");
-            noAnimate.onchange=checkAnimation;
+            noAnimate.onchange = checkAnimation;
 
-           ball= document.getElementById("a0");
-           ball.onchange=checkAnimation;
-           
-           
-           stsn= document.getElementById("a1");
-           stsn.onchange =drawStillSnow;
+            ball = document.getElementById("a0");
+            ball.onchange = checkAnimation;
 
-            mvsn= document.getElementById("a2");
+
+            stsn = document.getElementById("a1");
+            stsn.onchange = drawStillSnow;
+
+            mvsn = document.getElementById("a2");
             mvsn.onchange = checkAnimation;
 
-            pan=document.getElementById("a3");
+            pan = document.getElementById("a3");
             pan.onchange = checkAnimation;
 
-           lght= document.getElementById("a4");
-             lght.onchange = checkAnimation;
-
-            shkglRb=document.getElementById("a5");
+            lght = document.getElementById("a4");
             lght.onchange = checkAnimation;
+
+            onLght = document.getElementById("a5");
+            onLght.onchange = checkAnimation;
+
+            shkglRb = document.getElementById("a6");
+            shkglRb.onchange = checkAnimation;
+
             createWorld();
             installTrackballControls();
             render();
@@ -736,24 +277,37 @@
 
 </head>
 
+<!-- html elements for radio buttons and style-->
 <body onload="init()">
 
     <div id="content">
 
         <h2>A Panda in a Snow Globe</h2>
 
-        <p><b>Use the mouse to rotate the scene.</b>
+        <p>
+            <b>Use the mouse to rotate the scene.</b>
         </p>
-        <p><b>Animate:</b><br>
-            <label><input type="radio"  id="noAnimate" name="model">None</label>
-        <label><input type="radio" id="a0" name="model">Release Balloon</label>
-            <label ><input type="radio" id="a1" name="model">Show Still Snow</label>
-            <label ><input type="radio" id="a2" name="model">Animate Snow</label>
-            <label ><input type="radio" id="a3" name="model">Animate Panda</label>
-            <label><input type="radio" id="a4" name="model">Turn off Globe Light</label>
-            <label ><input type="radio" id="a5" name="model">Shake Globe</label> 
+        <p>
+            <b>Animate:</b>
+            <br>
+            <label>
+                <input type="radio" id="noAnimate" name="model">Reset</label>
+            <label>
+                <input type="radio" id="a0" name="model">Release Balloon</label>
+            <label>
+                <input type="radio" id="a1" name="model">Show Still Snow</label>
+            <label>
+                <input type="radio" id="a2" name="model">Animate Snow</label>
+            <label>
+                <input type="radio" id="a3" name="model">Animate Panda</label>
+            <label>
+                <input type="radio" id="a4" name="model">Turn Off Globe Light</label>
+            <label>
+                <input type="radio" id="a5" name="model">Turn On Globe Light</label>
+            <label>
+                <input type="radio" id="a6" name="model">Shake Globe</label>
         </p>
-         
+
         <div id="canvas-holder">
             <canvas id="maincanvas" width="1000" height="800"></canvas>
         </div>
