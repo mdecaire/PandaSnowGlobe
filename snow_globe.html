@@ -28,9 +28,11 @@
         var snow;
         var bear;
         var balloon;
-        var animating=true, balloonFly =false, stillSnow=false, animateSnow=false, animatePanda=false;
+        var animating=true, balloonFly =false;
+        var stillSnow=false, animateSnow=false, animatePanda=false;
         var lightOff;
         var noAnimate, ball, pan,stsn,mvsn,lght;
+       
         function createWorld() {
 
             renderer.setClearColor(0x8B8989);
@@ -43,69 +45,79 @@
             light.position.set(0, 0, 0);
             camera.add(light); // Viewpoint light moves with camera.
             scene.add(camera);
-        
-             globe = drawGlobe();
-             bear = drawBear();
+            drawImages();
              
             scene.add(new THREE.AmbientLight(0x000000));
-            scene.add(globe);
-            bear.rotation.set(0, -.1, 0);
+            
+           
+
+        }
+        function drawImages(){
+            globe = drawGlobe();
+             bear = drawBear();
+             scene.add(globe);
+             bear.rotation.set(0, -.1, 0);
             bear.position.y = -5;
             globe.add(bear);
                       
             globe.scale.set(1.1,1.1,1.1,);
-
         }
         
-
+        var points0; 
+        var points1;
+        var points2;
+       
         function drawSnow() {
-            var points = getPoints();
-            var points1 = getPoints();
-            var points2 = getPoints();
+             points0 = getPoints();  
+             points1 = getPoints();
+             points2 = getPoints();
 
             var pointMaterial = new THREE.PointCloudMaterial({
                 color: "blue",
                 size: 2,
-                shininess: 10,
                 sizeAttenuation: false
             });
 
             var pointMaterial1 = new THREE.PointCloudMaterial({
                 color: "red",
                 size: 2,
-                shininess: 10,
                 sizeAttenuation: false
             });
 
             var pointMaterial2 = new THREE.PointCloudMaterial({
                 color: "green",
                 size: 2,
-                shininess: 10,
                 sizeAttenuation: false
             });
-            var sphereOfPoints = new THREE.PointCloud(points, pointMaterial);
+           var sphereOfPoints = new THREE.PointCloud(points0, pointMaterial);
             var sphereOfPoints1 = new THREE.PointCloud(points1, pointMaterial1);
             var sphereOfPoints2 = new THREE.PointCloud(points2, pointMaterial2);
             sphereOfPoints.add(sphereOfPoints1);
             sphereOfPoints.add(sphereOfPoints2);
+        
             return sphereOfPoints;
         }
 
-        //taken from the textbook
-
+        //modified  from the textbook to add color
+    
         function getPoints() {
+            var i=0;
             var points = new THREE.Geometry();
+
             while (points.vertices.length < 500) {
                 var x = 2 * Math.random() - 1; // (between -1 and 1)
                 var y = 2 * Math.random() - 1;
                 var z = 2 * Math.random() - 1;
                 if (x * x + y * y + z * z < 1) { // use vector only if length is less than 1
+                    
                     var pt = new THREE.Vector3(x, y, z);
                     points.vertices.push(pt);
                 }
+                i++;
             }
-            return points;
-        }
+          return points;
+    }
+
 
         function drawBear() {
 
@@ -506,25 +518,27 @@
 
        var count=0;
        var snCount=0;
+       var existingSnow=false;
         function doFrame () { 
             if( animating && balloonFly) {
                 ballMovement();
                 render();
                 requestAnimationFrame(doFrame); 
         	}
-            if(animating && stillSnow){
-                snCount++
-                if(snCount<3){
-                snow = drawSnow();
-                snow.scale.set(10.9, 10.9, 10.9);
-                globe.add(snow);
-            }
+            
+            if(animating && animateSnow){
+                updateForDrift();
                 render();
                 requestAnimationFrame(doFrame); 
             }
             
         }
-
+        function drawStillSnow(){
+            snow = drawSnow();
+                snow.scale.set(10.9, 10.9, 10.9);
+                globe.add(snow);
+                render();
+        }
         function ballMovement(){
             count++;
             if(count==50){
@@ -536,22 +550,75 @@
             balloon.position.y+=.1;
 
         }
+        var driftPoints;
+        var driftSpeeds;
+        var geometry;
+        var pointCloud;
 
-        function updateForDrift() {
-            for (var i = 0; i < geometry.vertices.length; i++) {
-                var v = points[i];
-                v.add(driftSpeeds[i]);
-
-                if (v.length() > 1) {                    
-                    driftSpeeds[i] = randomVelocity();
-                    v.multiplyScalar(0.9997);
-                } else if (Math.random() < 0.001) {
-                    // change to a new random velocity, with a small probability
-                    driftSpeeds[i] = randomVelocity();
-                }
-            }
-            geometry.verticesNeedUpdate = true;
+        function drawDriftSnow(){
+            driftPoints = new Array(1500);
+            driftSpeeds = new Array(1500);
+            var i=0;
+            while (i < 1500) {
+                var x = 2*Math.random() - 1;
+                var y = 2*Math.random() - 1;
+                var z = 2*Math.random() - 1;
+        if ( x*x + y*y + z*z < 1 ) {  
+            driftSpeeds[i] = randomVelocity();
+			driftPoints[i] = new THREE.Vector3(x,y,z);
+			i++;
         }
+    }
+    geometry = new THREE.Geometry();
+    for (i = 0; i < 1000; i++) {
+        geometry.vertices.push(driftPoints[i]);
+    }
+        var material = new THREE.PointCloudMaterial({
+                color: 0x800080,
+                size: 2,
+                sizeAttenuation: false
+            });
+            pointCloud = new THREE.PointCloud(geometry,material);
+            pointCloud.scale.set(10.9, 10.9, 10.9);
+            globe.add(pointCloud);
+      }
+      var snCount=0;
+ function updateForDrift() {  
+     if(snCount==0){
+            drawDriftSnow();  
+            snCount++;
+        }   
+    for (var i = 0; i < geometry.vertices.length; i++) {
+        var v = driftPoints[i];
+        v.add( driftSpeeds[i] );
+        if (v.length() > 1) {
+			    
+            driftSpeeds[i] = randomVelocity();
+			v.multiplyScalar(0.9997);
+        }
+		else if (Math.random() < 0.001) {
+			   // change to a new random velocity, with a small probability
+            driftSpeeds[i] = randomVelocity();
+		}
+    }
+    geometry.verticesNeedUpdate = true;
+}
+
+        function randomVelocity() {
+            var dx = 0.001 + 0.003*Math.random();
+            var dy = 0.001 + 0.003*Math.random();
+            var dz = 0.001 + 0.003*Math.random();
+            if (Math.random() < 0.5) {
+                dx = -dx;
+            }
+            if (Math.random() < 0.5) {
+                dy = -dy;
+            }
+            if (Math.random() < 0.5) {
+                dz = -dz;
+            }
+            return new THREE.Vector3(dx,dy,dz);
+}
 
 
         function installTrackballControls() {
@@ -589,19 +656,43 @@
 
         function checkAnimation() {
         if (noAnimate.checked) {
-            animating = false;  // Will stop the animation if one is in progress.
-        } else if ( ball.checked) { 
+            animating = false;
+            scene.remove(globe);
+            drawImages();
+            render();
+        } else{
+            animating=true;
+        }
+         if ( ball.checked) { 
             count=0;
             balloonFly=true;
             doFrame();
-        } else if ( stsn.checked){
-            stillSnow=true;
+        } 
+        else{
+            balloonFly=false;
+        }
+         if ( mvsn.checked){
+             snCount=0;
+            animateSnow=true;
+            globe.remove(snow);
+            render();
+            doFrame();
+        }else{
+            animateSnow=false
+            globe.remove(pointCloud);
+            render();
             doFrame();
         }
+        if(pan.checked){
+            animatePanda=true;
+        }
+        else{
+            animatePanda=false;
+        }
 }
+    
 
-
- 
+ var shkglRb;
         function init() {
             try {
                 canvas = document.getElementById("maincanvas");
@@ -624,7 +715,7 @@
            
            
            stsn= document.getElementById("a1");
-           stsn.onchange =checkAnimation;
+           stsn.onchange =drawStillSnow;
 
             mvsn= document.getElementById("a2");
             mvsn.onchange = checkAnimation;
@@ -635,6 +726,8 @@
            lght= document.getElementById("a4");
              lght.onchange = checkAnimation;
 
+            shkglRb=document.getElementById("a5");
+            lght.onchange = checkAnimation;
             createWorld();
             installTrackballControls();
             render();
@@ -658,7 +751,8 @@
             <label ><input type="radio" id="a2" name="model">Animate Snow</label>
             <label ><input type="radio" id="a3" name="model">Animate Panda</label>
             <label><input type="radio" id="a4" name="model">Turn off Globe Light</label>
-         </p>
+            <label ><input type="radio" id="a5" name="model">Shake Globe</label> 
+        </p>
          
         <div id="canvas-holder">
             <canvas id="maincanvas" width="1000" height="800"></canvas>
